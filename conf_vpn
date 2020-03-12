@@ -1,0 +1,17 @@
+# Creamos el pool con las ips.
+ip pool add name="L2TP_Network" ranges=172.0.0.10-172.0.0.20 comment="VPN_Casa"
+
+# Creamos el perfil PPP.
+ppp profile add name="L2TP_Profile" local-address=L2TP_Network remote-address=L2TP_Network dns-server=8.8.8.8 use-encryption=yes comment="VPN_Casa"
+
+# Creamos el usuario para la autentificacion.
+ppp secret add name="USUARIO" password="PASSWORD" service=l2tp profile=L2TP_Profile comment="VPN_Casa"
+
+# Agregamos los protocolos de seguridad.
+ip ipsec proposal add name="L2TP_proposal" auth-algorithms=sha1 enc-algorithms=3des,aes-256-cbc comment="VPN_Casa"
+
+#
+ip ipsec peer add address=0.0.0.0/0 auth-method=pre-shared-key exchange-mode=main secret="PALABRA_SECRETA" policy-template-group=default send-initial-contact=yes nat-traversal=yes  my-id=auto generate-policy=port-override dpd-interval=120 dpd-maximum-failures=5 proposal-check=obey hash-algorithm=sha1 enc-algorithm=3des,aes-256 dh-group=modp1024 comment="VPN_Casa"
+
+#
+ip ipsec policy add src-address=0.0.0.0/0 dst-address=0.0.0.0/0 template=yes protocol=all action=encrypt level=require ipsec-protocols=esp sa-src-address=0.0.0.0 sa-dst-address=0.0.0.0 proposal=L2TP_proposal comment="VPN_Casa"
